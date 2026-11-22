@@ -7,6 +7,9 @@ uniform sampler2D uOniMaskTexture;
 uniform sampler2D uDepthTexture;
 uniform vec2 uMouse;
 uniform float uProgress;
+uniform vec2 uMouseUv;
+uniform float uCursorActive;
+uniform float uRadius;
 
 in vec2 vUv;
 in vec3 worldPosition;
@@ -30,7 +33,13 @@ void main()
 
     float noise = texture( uNoiseTexture, uv ).r;
 
-    noise = step( uProgress, noise );
+    // cursor reveal: soft circle around the pointer with a noisy, ragged edge
+    float dist = distance( uv, uMouseUv );
+    float cursor = 1.0 - smoothstep( uRadius * 0.5, uRadius, dist + ( noise - 0.5 ) * uRadius * 0.7 );
+    cursor *= uCursorActive;
+
+    // slider = base reveal (1.0 = nothing revealed until the cursor reveals it)
+    noise = max( step( uProgress, noise ), cursor );
 
     vec4 albedo = texture( uOniPersonTexture, uvFakeDepth );
     vec4 helmet = texture( uOniHelmetTexture, uvFakeDepth );
